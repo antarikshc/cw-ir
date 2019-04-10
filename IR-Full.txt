@@ -1,0 +1,294 @@
+Practical 1: Demonstrate Bitwise operation
+(Python Shell)
+
+COMPLEMENT - It is unary and has the effect of 'flipping' bits.
+a = 12
+~a
+
+AND - Operator copies a bit to the result if it exists in both operands
+a = 12
+b = 13
+a & b
+
+OR - It copies a bit if it exists in either operand
+a = 12
+b = 13
+a | b
+
+XOR - It copies the bit if it is set in one operand but not both.
+a = 12
+b = 13
+a ^ b
+
+LEFTSHIFT - The number of bits specified by the right operand moves the left operands value left.
+a = 10
+n = 2
+a << n
+
+RIGHTSHIFT - The left operands value is moved right by the number of bits specified by the right operand.
+a = 10
+n = 2
+a >> n
+
+______________________________________________________________________
+
+Practical 2: Page Rank Algorithm
+(RStudio)
+
+library(igraph)
+A <- matrix(c(0, 1/2, 1/2, 0, 0, 0,
+              1/6, 1/6, 1/6, 1/6, 1/6, 1/6,
+              1/3, 1/3, 0, 0, 1/3, 0,
+              0, 0, 0, 0, 1/2, 1/2,
+              0, 0, 0, 1/2, 0, 1/2,
+              0, 0, 0, 1, 0, 0), nrow=6)
+
+graph_A <- graph.adjacency( t(A), weighted = TRUE, mode="directed")
+plot(graph_A)
+
+myresult <- page.rank(graph_A)$vector
+myresult
+
+myresult <- page.rank(graph_A)
+myresult
+
+______________________________________________________________________
+
+Practical 3: Dynamic Programming for Edit Distance between strings (Levenshtein Distance)
+(RStudio)
+
+def editDistance(x, y):
+
+    D = []
+    for i in range(len(x)+1):
+        D.append([0]*(len(y)+1))
+
+    for i in range(len(x)+1):
+        D[i][0] = i
+
+    for j in range(len(x)+1):
+        D[0][i] = i
+
+    for i in range(1, len(x)+1):
+        for j in range(len(y)+1):
+
+            distHor = D[i][j-1]+1
+            distVer = D[i-1][j]+1
+
+            if x[i-1] == y[j-1]:
+                distDiag = D[i-1][j-1]
+            else:
+                distDiag = D[i-1][j-1]+1
+
+            D[i][j] = min(distHor, distVer, distDiag)
+    return D[-1][-1]
+
+
+x = 'kitten'
+y = 'sitting'
+print(editDistance(x, y))
+
+______________________________________________________________________
+
+Practical 4: Compute Similarity between two text documents
+(RStudio)
+
+require("tm")
+my.corpus <- Corpus(DirSource("/path/to/files/"))
+getTransformations
+
+my.corpus <- tm_map(my.corpus, removePunctuation)
+my.corpus <- tm_map(my.corpus, removeWords, stopwords("english"))
+require("SnowballC")
+my.corpus <- tm_map(my.corpus, stemDocument)
+save.image(file="work.RData")
+my.tdm <- TermDocumentMatrix(my.corpus)
+inspect(my.tdm)
+
+View(my.corpus)
+findFreqTerms(my.tdm, 2)
+
+findAssocs(my.tdm, 'work', 0.20)
+
+findAssocs(my.tdm, 'test', 0.20)
+
+my.df <- as.data.frame(inspect(my.tdm))
+my.df.scale <- scale(my.df)
+d<-dist(my.df.scale, method = "euclidean")
+fit <- hclust(d, method = "ward.D")
+plot(fit)
+
+______________________________________________________________________
+
+Practical 5: Pre-processing of a Text Document: stop word removal.
+(RStudio)
+
+require("tm")
+my.corpus <- Corpus(DirSource("/path/to/folder"))
+getTransformations
+my.corpus <- tm_map(my.corpus, removePunctuation)
+my.corpus <- tm_map(my.corpus, removeWords, stopwords("end"))
+save.image(file="work.RData")
+View(my.corpus)
+work = load("/path/to/documents/work.RData")
+head(work)
+
+______________________________________________________________________
+
+Practical 6: mining Twitter to identify tweets for a specific period and identify trends and named entities
+(Python)
+
+import tweepy
+from tkinter import *
+from time import sleep
+from datetime import datetime
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+
+consumer_key = 'oEtFa5rcUFKQ0c8OjmAbGUu54'
+consumer_secret = 'Ssw024U1kHBlrOxmUbYZx8ZX4rDJam9VRS4T8cKFPzJ2mmElQl'
+access_token = '700594962556014592-ReVsnL46ioYOgrecXmoVgQ3dG3Ukn5H'
+access_token_secret = 'JPlFMCFifxFXSXmqj3qtB6vp4kUodyOxc38y8RmpKX20x'
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+root = Tk()
+label1 = Label(root, text="Search")
+E1 = Entry(root, bd=5)
+label2 = Label(root, text="Sample Size")
+E2 = Entry(root, bd=5)
+
+
+def getE1():
+    return E1.get()
+
+
+def getE2():
+    return E2.get()
+
+
+def getData():
+    getE1()
+    keyword = getE1()
+    getE2()
+    numberOfTweets = getE2()
+    numberOfTweets = int(numberOfTweets)
+    # Where the tweets are stored to be plotted
+    polarity_list = []
+    numbers_list = []
+    number = 1
+    for tweet in tweepy.Cursor(api.search, keyword, lang="en").items(numberOfTweets):
+        try:
+            analysis = TextBlob(tweet.text)
+            analysis = analysis.sentiment
+            polarity = analysis.polarity
+            polarity_list.append(polarity)
+            numbers_list.append(number)
+            number = number + 1
+        except tweepy.TweepError as e:
+            print(e.reason)
+        except StopIteration:
+            break
+    axes = plt.gca()
+    axes.set_ylim([-1, 2])
+    plt.scatter(numbers_list, polarity_list)
+    averagePolarity = (sum(polarity_list))/(len(polarity_list))
+    averagePolarity = "{0:.0f}%".format(averagePolarity * 100)
+    time = datetime.now().strftime("At: %H:%M\nOn: %m-%d-%y")
+    plt.text(0, 1.25, "Average Sentiment:  " + str(averagePolarity) + "\n" + time,
+             fontsize=12, bbox=dict(facecolor='none', edgecolor='black', boxstyle='square, pad = 1'))
+    plt.title("Sentiment of " + keyword + " on Twitter")
+    plt.xlabel("Number of Tweets")
+    plt.ylabel("Sentiment")
+    plt.show()
+
+
+submit = Button(root, text="Submit", command=getData)
+label1.pack()
+E1.pack()
+label2.pack()
+E2.pack()
+submit.pack(side=BOTTOM)
+root.mainloop()
+
+______________________________________________________________________
+
+Practical 7: Implement simple web crawler (Python)
+
+import requests
+from bs4 import BeautifulSoup
+url = ("www.amazon.in")
+code = requests.get("https://"+url)
+plain = code.text
+soup = BeautifulSoup(plain, "html.parser")
+for link in soup.find_all('a'):
+    print(link.get('href'))
+
+______________________________________________________________________
+
+Practical 8: parse XML text, generate Web graph and compute topic specific page rank
+(Python)
+
+import csv
+import requests
+import xml.etree.ElementTree as ET
+
+def loadRSS():
+    # url of rss feed
+    url = 'http://www.hindustantimes.com/rss/topnews/rssfeed.xml'
+    # creating HTTP response object from given url
+    resp = requests.get(url)
+    # saving the xml file
+    with open('topnewsfeed.xml', 'wb') as f:
+        f.write(resp.content)
+
+
+def parseXML(xmlfile):
+    # create element tree object
+    tree = ET.parse(xmlfile)
+    # get root element
+    root = tree.getroot()
+    # create empty list for news items
+    newsitems = []
+    # iterate news items
+    for item in root.findall('./channel/item'):
+        # empty news dictionary
+        news = {}
+        # iterate child elements of item
+        for child in item:
+            # special checking for namespace object content:media
+            if child.tag == '{http://search.yahoo.com/mrss/}content':
+                news['media'] = child.attrib['url']
+            else:
+                news[child.tag] = child.text.encode('utf8')
+        # append news dictionary to news items list
+        newsitems.append(news)
+    # return news items list
+    return newsitems
+
+
+def savetoCSV(newsitems, filename):
+    # specifying the fields for csv file
+    fields = ['guid', 'title', 'pubDate', 'description', 'link', 'media']
+    # writing to csv file
+    with open(filename, 'w') as csvfile:
+        # creating a csvdict writer object
+        writer = csv.DictWriter(csvfile, fieldnames=fields)
+        # writing headers (field names)
+        writer.writeheader()
+        # writing data rows
+        writer.writerows(newsitems)
+
+
+def main():
+    # load rss from web to update existing xml file
+    loadRSS()
+    # parse xml file
+    newsitems = parseXML('topnewsfeed.xml')
+    # store news items in a csv file
+    savetoCSV(newsitems, 'topnews.csv')
+
+
+if __name__ == "__main__":
+    # calling main function
+    main()
